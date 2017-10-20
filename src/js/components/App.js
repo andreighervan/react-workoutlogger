@@ -3,6 +3,7 @@ var ReactDOM = require('react-dom');
 var AppActions = require('../actions/AppActions.js');
 var AppStore = require('../stores/AppStore.js');
 var AddForm = require('./AddForm.js');
+var Workouts=require('./Workouts');
 
 function getAppState() {
     return {
@@ -36,6 +37,7 @@ var App = React.createClass({
                 <a href="#" className="btn btn-primary btn-block" onClick={this.onShowFormClick}>Add Workout</a>
                 <br/>
                 {form}
+                <Workouts workouts={this.state.workouts}/>
             </div>
         )
     },

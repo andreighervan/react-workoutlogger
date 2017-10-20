@@ -10,5 +10,14 @@ module.exports = {
     getWorkouts: function () {
         var workouts = JSON.parse(localStorage.getItem('workouts'));
         AppActions.receiveWorkouts(workouts);
+    },
+    removeWorkout:function(workoutId){
+        var workouts = JSON.parse(localStorage.getItem('workouts'));
+        for(var i=0;i<workouts.length;i++){
+            if(workouts[i]==workoutId){
+                workouts.splice(i,1);
+            }
+        }
+        localStorage.setItem('workouts', JSON.stringify(workouts));
     }
 };

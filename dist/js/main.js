@@ -19776,11 +19776,23 @@ var AppActions = {
             actionType: AppConstants.ADD_WORKOUT,
             workout:workout
         });
+    },
+    receiveWorkouts:function(workouts){
+        AppDispatcher.handleViewAction({
+            actionType: AppConstants.RECEIVE_WORKOUTS,
+            workouts:workouts
+        });
+    },
+    removeWorkout:function(workoutId){
+        AppDispatcher.handleViewAction({
+            actionType: AppConstants.REMOVE_WORKOUT,
+            workoutId:workoutId
+        });
     }
 };
 
 module.exports = AppActions;
-},{"../constants/AppConstants.js":167,"../dispatcher/AppDispatcher.js":168}],165:[function(require,module,exports){
+},{"../constants/AppConstants.js":169,"../dispatcher/AppDispatcher.js":170}],165:[function(require,module,exports){
 var React = require('react');
 var AppActions = require('../actions/AppActions.js');
 var AppStore = require('../stores/AppStore.js');
@@ -19829,12 +19841,13 @@ var AddForm = React.createClass({displayName: "AddForm",
 
 module.exports = AddForm;
 
-},{"../actions/AppActions.js":164,"../stores/AppStore.js":171,"react":163}],166:[function(require,module,exports){
+},{"../actions/AppActions.js":164,"../stores/AppStore.js":173,"react":163}],166:[function(require,module,exports){
 var React = require('react');
 var ReactDOM = require('react-dom');
 var AppActions = require('../actions/AppActions.js');
 var AppStore = require('../stores/AppStore.js');
 var AddForm = require('./AddForm.js');
+var Workouts=require('./Workouts');
 
 function getAppState() {
     return {
@@ -19867,7 +19880,8 @@ var App = React.createClass({displayName: "App",
                 React.createElement("h1", {className: "text-center page-header"}, "WorkoutLogger"), 
                 React.createElement("a", {href: "#", className: "btn btn-primary btn-block", onClick: this.onShowFormClick}, "Add Workout"), 
                 React.createElement("br", null), 
-                form
+                form, 
+                React.createElement(Workouts, {workouts: this.state.workouts})
             )
         )
     },
@@ -19879,12 +19893,62 @@ var App = React.createClass({displayName: "App",
 
 module.exports = App;
 
-},{"../actions/AppActions.js":164,"../stores/AppStore.js":171,"./AddForm.js":165,"react":163,"react-dom":34}],167:[function(require,module,exports){
+},{"../actions/AppActions.js":164,"../stores/AppStore.js":173,"./AddForm.js":165,"./Workouts":168,"react":163,"react-dom":34}],167:[function(require,module,exports){
+var React = require('react');
+var AppActions = require('../actions/AppActions.js');
+var AppStore = require('../stores/AppStore.js');
+
+var Workout = React.createClass({displayName: "Workout",
+    render: function () {
+        if(this.props.workout.miles!=''){
+            var miles=' | '+this.props.workout.miles+" miles";
+        }else{
+            var miles='';
+        }
+        return (
+          React.createElement("li", {className: "list-group-item"}, 
+              this.props.workout.type, " - ", this.props.workout.minutes, " Minutes ", miles, " ", React.createElement("a", {href: "#", className: "delete", onClick: this.onDelete.bind(this,this.props.workout.id)}, "x")
+              )
+        )
+    },
+    onDelete:function(i,j){
+        AppActions.removeWorkout(i);
+    }
+});
+
+module.exports = Workout;
+
+},{"../actions/AppActions.js":164,"../stores/AppStore.js":173,"react":163}],168:[function(require,module,exports){
+var React = require('react');
+var AppActions = require('../actions/AppActions.js');
+var AppStore = require('../stores/AppStore.js');
+var Workout=require('./Workout');
+
+var Workouts = React.createClass({displayName: "Workouts",
+    render: function () {
+        return (
+           React.createElement("ul", {className: "list-group"}, 
+               this.props.workouts.map(function(workout,i){
+                   return(
+                       React.createElement(Workout, {workout: workout, key: i})
+                   )
+               })
+               
+               )
+        )
+    }
+});
+
+module.exports = Workouts;
+
+},{"../actions/AppActions.js":164,"../stores/AppStore.js":173,"./Workout":167,"react":163}],169:[function(require,module,exports){
 module.exports = {
     SHOW_FORM: 'SHOW_FORM',
-    ADD_WORKOUT:'ADD_WORKOUT'
+    ADD_WORKOUT:'ADD_WORKOUT',
+    RECEIVE_WORKOUTS:'RECEIVE_WORKOUTS',
+    REMOVE_WORKOUT:'REMOVE_WORKOUT'
 };
-},{}],168:[function(require,module,exports){
+},{}],170:[function(require,module,exports){
 var Dispatcher=require('flux').Dispatcher;
 var assign=require('object-assign');
 var AppDispatcher=assign(new Dispatcher(),{
@@ -19899,12 +19963,14 @@ var AppDispatcher=assign(new Dispatcher(),{
 
 module.exports=AppDispatcher;
 
-},{"flux":29,"object-assign":32}],169:[function(require,module,exports){
+},{"flux":29,"object-assign":32}],171:[function(require,module,exports){
 var App = require('./components/App.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var AppAPI = require('./utils/appAPI.js');
 var startData = require('./startData');
+
+AppAPI.getWorkouts();
 
 if (localStorage.getItem('workouts') == null) {
     startData.init();
@@ -19913,7 +19979,7 @@ ReactDOM.render(
     React.createElement(App, null),
     document.getElementById('app')
 );
-},{"./components/App.js":166,"./startData":170,"./utils/appAPI.js":172,"react":163,"react-dom":34}],170:[function(require,module,exports){
+},{"./components/App.js":166,"./startData":172,"./utils/appAPI.js":174,"react":163,"react-dom":34}],172:[function(require,module,exports){
 module.exports={
     init:function(){
         localStorage.clear();
@@ -19935,7 +20001,7 @@ module.exports={
         ]))
     }
 };
-},{}],171:[function(require,module,exports){
+},{}],173:[function(require,module,exports){
 var AppDispatcher = require('../dispatcher/AppDispatcher.js');
 var AppConstants = require('../constants/AppConstants.js');
 
@@ -19953,11 +20019,18 @@ var AppStore = assign({}, EventEmitter.prototype, {
     addWorkout:function(workout){
       _workouts.push(workout);
     },
+    receiveWorkouts:function(workouts){
+        _workouts=workouts;
+    },
     getShowForm:function(){
         return _showForm;
     },
     getWorkouts:function(){
         return _workouts;
+    },
+    removeWorkout:function(workoutId){
+        var index=_workouts.findIndex(x=>x.id===workoutId);
+        _workouts.splice(index,1);
     },
     emitChange: function () {
         this.emit(CHANGE_EVENT);
@@ -19979,7 +20052,16 @@ AppDispatcher.register(function (payload) {
             break;
         case AppConstants.ADD_WORKOUT:
             AppStore.addWorkout(action.workout);
-            appAPI.addWorkout(action.workout);
+            AppAPI.addWorkout(action.workout);
+            AppStore.emit(CHANGE_EVENT);
+            break;
+        case AppConstants.RECEIVE_WORKOUTS:
+            AppStore.receiveWorkouts(action.workouts);
+            AppStore.emit(CHANGE_EVENT);
+            break;
+        case AppConstants.REMOVE_WORKOUT:
+            AppStore.removeWorkout(action.workoutId);
+            AppAPI.removeWorkout(action.workoutId);
             AppStore.emit(CHANGE_EVENT);
             break;
     }
@@ -19987,7 +20069,7 @@ AppDispatcher.register(function (payload) {
 });
 
 module.exports = AppStore;
-},{"../constants/AppConstants.js":167,"../dispatcher/AppDispatcher.js":168,"../utils/appAPI.js":172,"events":1,"object-assign":32}],172:[function(require,module,exports){
+},{"../constants/AppConstants.js":169,"../dispatcher/AppDispatcher.js":170,"../utils/appAPI.js":174,"events":1,"object-assign":32}],174:[function(require,module,exports){
 var AppActions = require('../actions/AppActions');
 
 module.exports = {
@@ -20000,7 +20082,16 @@ module.exports = {
     getWorkouts: function () {
         var workouts = JSON.parse(localStorage.getItem('workouts'));
         AppActions.receiveWorkouts(workouts);
+    },
+    removeWorkout:function(workoutId){
+        var workouts = JSON.parse(localStorage.getItem('workouts'));
+        for(var i=0;i<workouts.length;i++){
+            if(workouts[i]==workoutId){
+                workouts.splice(i,1);
+            }
+        }
+        localStorage.setItem('workouts', JSON.stringify(workouts));
     }
 };
 
-},{"../actions/AppActions":164}]},{},[169]);
+},{"../actions/AppActions":164}]},{},[171]);
